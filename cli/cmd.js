@@ -422,25 +422,21 @@ const setup = function setup() {
             if (!options.env) {
                 return options.error('env is required');
             }
-            promptForKeySecret(options, (options) => {
-                if (!options.key) {
-                    return options.error('key is required');
-                }
+            if (!options.key) {
+                return options.error('key is required');
+            }
+            if (!options.secret) {
+                return options.error('secret is required');
+            }
 
-                if (!options.secret) {
-                    return options.error('secret is required');
+            promptForPassword(options, (options) => {
+                if (!options.password) {
+                    return options.error('password is required');
                 }
-
-                promptForPassword(options, (options) => {
-                    if (!options.password) {
-                        return options.error('password is required');
-                    }
-                    keyGenerator.revoke(options, (err) => {
-                        err ? process.exit(1) : process.exit(0);
-                    });
+                keyGenerator.revoke(options, (err) => {
+                    err ? process.exit(1) : process.exit(0);
                 });
             });
-
         });
 
     commander
