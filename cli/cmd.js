@@ -115,13 +115,15 @@ const setup = function setup() {
             if (!options.env) {
                 return options.error('env is required');
             }
-            if (!options.key) {
-                return options.error('key is required');
-            }
-            if (!options.secret) {
-                return options.error('secret is required');
-            }
-            verify.verify(options);
+            promptForKeySecret(options, (options) => {
+                if (!options.key) {
+                    return options.error('key is required');
+                }
+                if (!options.secret) {
+                    return options.error('secret is required');
+                }
+                verify.verify(options);
+            });
         });
 
 
@@ -169,12 +171,6 @@ const setup = function setup() {
 
                     });
             }
-            if (!options.key && !process.env.EDGEMICRO_LOCAL) {
-                return options.error('key is required');
-            }
-            if (!options.secret && !process.env.EDGEMICRO_LOCAL) {
-                return options.error('secret is required');
-            }
             if (!options.org) {
                 return options.error('org is required');
             }
@@ -209,39 +205,48 @@ const setup = function setup() {
                     }
                 }
             }
-            if (options.configUrl) {
-                options.configDir = options.configDir || os.homedir() + "/" + ".edgemicro";
-                if (!fs.existsSync(options.configDir)) fs.mkdirSync(options.configDir);
-                var fileName = options.org + "-" + options.env + "-config.yaml";
-                debug(fileName);
-                var filePath = options.configDir + "/" + fileName;
-                debug(filePath);
-                var parsedUrl = url.parse(options.configUrl, true);
-                debug(options.configUrl);
 
-                if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
-                    debug("downloading file...");
-                    request.get(options.configUrl, function(error, response, body) {
-                        if (error) {
-                            console.error("config file did not download: " + error);
-                            process.exit(1);
-                        }
-                        try {
-                            debug(body);
-                            fs.writeFileSync(filePath, body, 'utf8');
-                            run.start(options);
-                        } catch (err) {
-                            console.error("config file could not be written: " + err);
-                            process.exit(1);
-                        }
-                    });
-                } else {
-                    console.error("url protocol not supported: " + parsedUrl.protocol);
-                    process.exit(1);
+            promptForKeySecret(options, (options) => {
+                if (!options.key && !process.env.EDGEMICRO_LOCAL) {
+                    return options.error('key is required');
                 }
-            } else {
-                run.start(options);
-            }
+                if (!options.secret && !process.env.EDGEMICRO_LOCAL) {
+                    return options.error('secret is required');
+                }
+                if (options.configUrl) {
+                    options.configDir = options.configDir || os.homedir() + "/" + ".edgemicro";
+                    if (!fs.existsSync(options.configDir)) fs.mkdirSync(options.configDir);
+                    var fileName = options.org + "-" + options.env + "-config.yaml";
+                    debug(fileName);
+                    var filePath = options.configDir + "/" + fileName;
+                    debug(filePath);
+                    var parsedUrl = url.parse(options.configUrl, true);
+                    debug(options.configUrl);
+
+                    if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+                        debug("downloading file...");
+                        request.get(options.configUrl, function(error, response, body) {
+                            if (error) {
+                                console.error("config file did not download: " + error);
+                                process.exit(1);
+                            }
+                            try {
+                                debug(body);
+                                fs.writeFileSync(filePath, body, 'utf8');
+                                run.start(options);
+                            } catch (err) {
+                                console.error("config file could not be written: " + err);
+                                process.exit(1);
+                            }
+                        });
+                    } else {
+                        console.error("url protocol not supported: " + parsedUrl.protocol);
+                        process.exit(1);
+                    }
+                } else {
+                    run.start(options);
+                }
+            });
         });
 
     commander
@@ -261,46 +266,48 @@ const setup = function setup() {
             options.env = options.env || process.env.EDGEMICRO_ENV;
             options.configDir = options.configDir || process.env.EDGEMICRO_CONFIG_DIR;
             options.configUrl = options.configUrl || process.env.EDGEMICRO_CONFIG_URL;
-            if (!options.key) {
-                return options.error('key is required');
-            }
-            if (!options.secret) {
-                return options.error('secret is required');
-            }
             if (!options.org) {
                 return options.error('org is required');
             }
             if (!options.env) {
                 return options.error('env is required');
             }
-            if (options.configUrl) {
-                options.configDir = options.configDir || os.homedir() + "/" + ".edgemicro";
-                if (!fs.existsSync(options.configDir)) fs.mkdirSync(options.configDir);
-                var fileName = options.org + "-" + options.env + "-config.yaml";
-                debug(fileName);
-                var filePath = options.configDir + "/" + fileName;
-                debug(filePath);
-                var parsedUrl = url.parse(options.configUrl, true);
-                debug(options.configUrl);
-
-                if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
-                    debug("downloading file...");
-                    request.get(options.configUrl, function(error, response, body) {
-                        if (error) {
-                            console.error("config file did not download: " + error);
-                            process.exit(1);
-                        }
-                        try {
-                            debug(body);
-                            fs.writeFileSync(filePath, body, 'utf8');
-                            run.reload(options);
-                        } catch (err) {
-                            console.error("config file could not be written: " + err);
-                            process.exit(1);
-                        }
-                    });
+            promptForKeySecret(options, (options)=> {
+                if (!options.key) {
+                    return options.error('key is required');
                 }
-            } else run.reload(options);
+                if (!options.secret) {
+                    return options.error('secret is required');
+                }
+                if (options.configUrl) {
+                    options.configDir = options.configDir || os.homedir() + "/" + ".edgemicro";
+                    if (!fs.existsSync(options.configDir)) fs.mkdirSync(options.configDir);
+                    var fileName = options.org + "-" + options.env + "-config.yaml";
+                    debug(fileName);
+                    var filePath = options.configDir + "/" + fileName;
+                    debug(filePath);
+                    var parsedUrl = url.parse(options.configUrl, true);
+                    debug(options.configUrl);
+
+                    if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+                        debug("downloading file...");
+                        request.get(options.configUrl, function(error, response, body) {
+                            if (error) {
+                                console.error("config file did not download: " + error);
+                                process.exit(1);
+                            }
+                            try {
+                                debug(body);
+                                fs.writeFileSync(filePath, body, 'utf8');
+                                run.reload(options);
+                            } catch (err) {
+                                console.error("config file could not be written: " + err);
+                                process.exit(1);
+                            }
+                        });
+                    }
+                } else run.reload(options);
+            });
         });
 
     commander
@@ -415,20 +422,28 @@ const setup = function setup() {
             if (!options.env) {
                 return options.error('env is required');
             }
-            if (!options.key) {
-                return options.error('key is required');
-            }
-            if (!options.secret) {
-                return options.error('secret is required');
-            }
-            promptForPassword(options, (options) => {
-                if (!options.password) {
-                    return options.error('password is required');
+            promptForKey(options, (options) => {
+                if (!options.key) {
+                    return options.error('key is required');
                 }
-                keyGenerator.revoke(options, (err) => {
-                    err ? process.exit(1) : process.exit(0);
+
+                promptForSecret(options, (options) => {
+                    if (!options.secret) {
+                        return options.error('secret is required');
+                    }
+
+                    promptForPassword(options, (options) => {
+                        if (!options.password) {
+                            return options.error('password is required');
+                        }
+                        keyGenerator.revoke(options, (err) => {
+                            err ? process.exit(1) : process.exit(0);
+                        });
+                    });
                 });
             });
+
+
 
         });
 
@@ -591,6 +606,31 @@ function promptForPassword(options, cb) {
             cb(options);
         });
     }
+}
+
+function promptForKeySecret(options, cb) {
+
+    if (!options.key && !process.env.EDGEMICRO_LOCAL) {
+        prompt.password('key:', (key) => {
+            options.key = key;
+            if(!options.secret && !process.env.EDGEMICRO_LOCAL) {
+                prompt.password("secret:", (secret) => {
+                    options.secret = secret;
+                    cb(options);
+                });
+            } else {
+                cb(options);
+            }
+        });
+    } else if (!options.secret && !process.env.EDGEMICRO_LOCAL) {
+        prompt.password('secret:', (secret) => {
+            options.secret = secret;
+            cb(options);
+        });
+    } else {
+        cb(options);
+    }
+
 }
 
 //check url format
