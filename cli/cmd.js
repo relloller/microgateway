@@ -49,6 +49,7 @@ const setup = function setup() {
         .action((options) => {
             options.error = optionError;
             options.token = options.token || process.env.EDGEMICRO_SAML_TOKEN;
+            
 
             if (options.token) {
                 //If there is a token lets configure with standard opts.
