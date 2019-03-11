@@ -8,6 +8,7 @@ const org = process.env.MOCHA_ORG;
 const env = process.env.MOCHA_ENV;
 const tokenSecret = process.env.MOCHA_TOKEN_SECRET;
 const tokenId = process.env.MOCHA_TOKEN_ID;
+const otoken = process.env.MOCHA_SAML_TOKEN || '';
 
 assert(password, 'Must set environment variable MOCHA_PASSWORD');
 assert(user, 'Must set environment variable MOCHA_USER');
@@ -26,5 +27,6 @@ module.exports = {
   org,
   env,
   tokenSecret,
-  tokenId
+  tokenId,
+  otoken
 };
